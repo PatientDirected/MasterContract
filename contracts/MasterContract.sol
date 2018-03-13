@@ -158,7 +158,7 @@ contract MasterContract is Ownable {
 	}
 	
 	/**
-	* Function to get Patient ID from struct
+	* Function to get Requestor Array from struct
 	*/
 	function getPatientRequestorArray(address patientAddress) public view returns (address[] requestorArray) {
 		require(whitelists[patientAddress].patient == patientAddress);
@@ -166,7 +166,7 @@ contract MasterContract is Ownable {
 	}
 
 	/**
-	* Function to get Patient ID from struct
+	* Function to get Cost ID Array from struct
 	*/
 	function getPatientCostIdArray(address patientAddress) public view returns (uint[] costIDArray) {
 		require(whitelists[patientAddress].patient == patientAddress);
@@ -174,7 +174,7 @@ contract MasterContract is Ownable {
 	}
 
 	/**
-	* Function to get Patient ID from struct
+	* Function to get Cost List Array from struct
 	*/
 	function getPatientCostListArray(address patientAddress) public view returns (uint[] costlistArray) {
 		require(whitelists[patientAddress].patient == patientAddress);
