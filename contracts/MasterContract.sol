@@ -19,8 +19,7 @@ contract MasterContract is Ownable {
 	struct Whitelist {
 		address patient;
 		address[] requestors;
-		uint[] costIdArray;
-		uint[] costListArray;
+		uint[2][] costPairs;
 		mapping (uint => uint) costlist;
 	}
 
@@ -37,7 +36,7 @@ contract MasterContract is Ownable {
 	/**
 	* @dev Event to notify results of transaction
 	*/
-	event Result(address patientAddress, address requestor, bool result, uint[] costIds, uint[] costs);
+	event Result(address patientAddress, address requestor, bool result, uint[2][] costpairs);
 
 	/**
 	* Contract Constructor
@@ -49,11 +48,11 @@ contract MasterContract is Ownable {
 	*
 	* @dev Restricted to Owner within MVF scope
 	*/
-	function addPatient(address patientAddress, address[] requestors, uint[] costIdArray, uint[] costListArray) public onlyOwner {
+	function addPatient(address patientAddress, address[] requestors, uint[2][] costpairs) public onlyOwner {
 		require(whitelists[patientAddress].patient == address(0x0));
 		patients.push(patientAddress);
-		whitelists[patientAddress] = Whitelist(patientAddress, requestors, costIdArray, costListArray);
-		buildCostListMapping(patientAddress, costIdArray, costListArray);
+		whitelists[patientAddress] = Whitelist(patientAddress, requestors, costpairs);
+		buildCostListMapping(patientAddress, costpairs);
 	}
 
 	/**
@@ -96,20 +95,18 @@ contract MasterContract is Ownable {
 	/**
 	* @dev Function to update a patient's cost list
 	*/
-	function updateWhitelistCosts(address patientAddress, uint[] costIdsArray, uint[] costsArray) public onlyOwner {
+	function updateWhitelistCosts(address patientAddress, uint[2][] costpairs) public onlyOwner {
 		require(whitelists[patientAddress].patient != address(0x0));
-
-		buildCostListMapping(patientAddress, costIdsArray, costsArray);
-		whitelists[patientAddress].costIdArray = costIdsArray;
-		whitelists[patientAddress].costListArray = costsArray;
+		buildCostListMapping(patientAddress, costpairs);
+		whitelists[patientAddress].costPairs = costpairs;
 	}
 
 	/**
 	* @dev Function to create the patient's cost map
 	*/
-	function buildCostListMapping(address patientAddress, uint[] costIdArray, uint[] costListArray) internal {
-		for (uint i = 0; i < costIdArray.length; i++) {
-			whitelists[patientAddress].costlist[costIdArray[i]] = costListArray[i];
+	function buildCostListMapping(address patientAddress, uint[2][] costpairs) internal {
+		for (uint j = 0; j < costpairs.length; j++) {
+			whitelists[patientAddress].costlist[costpairs[j][0]] = costpairs[j][1];
 		}
 	}
 	
@@ -118,13 +115,12 @@ contract MasterContract is Ownable {
 	* @dev Returns result and, if authorized, patient's pricelist
 	*/
 	function authorizeRequestor(address patientAddress, address requestor) public returns 
-	(address patientAddressReturn, address requestorReturn, bool resultReturn, uint[] costIdReturn, uint[] costListReturn) {
+	(address patientAddressReturn, address requestorReturn, bool resultReturn, uint[2][] costpairs) {
 		require(whitelists[patientAddress].patient == patientAddress);
 
 		address[] memory requestors = whitelists[patientAddress].requestors;
 		bool approved = false;
-		uint[] memory costIDs;
-		uint[] memory costs;
+		uint[2][] memory costpairArr;
 
 		for (uint i = 0; i < requestors.length; i++) {
 			if (requestors[i] == requestor) {
@@ -134,12 +130,11 @@ contract MasterContract is Ownable {
 		}
 
 		if (approved == true) {
-			costIDs = whitelists[patientAddress].costIdArray;
-			costs = whitelists[patientAddress].costListArray;
+			costpairArr = whitelists[patientAddress].costPairs;
 		}
 
-		Result(patientAddress, requestor, approved, costIDs, costs);
-		return (patientAddress, requestor, approved, costIDs, costs);
+		Result(patientAddress, requestor, approved, costpairArr);
+		return (patientAddress, requestor, approved, costpairArr);
 
 	}
 
@@ -168,17 +163,17 @@ contract MasterContract is Ownable {
 	/**
 	* Function to get Cost ID Array from struct
 	*/
-	function getPatientCostIdArray(address patientAddress) public view returns (uint[] costIDArray) {
-		require(whitelists[patientAddress].patient == patientAddress);
-		return whitelists[patientAddress].costIdArray;
-	}
+	// function getPatientCostIdArray(address patientAddress) public view returns (uint[] costIDArray) {
+	// 	require(whitelists[patientAddress].patient == patientAddress);
+	// 	return whitelists[patientAddress].costIdArray;
+	// }
 
 	/**
 	* Function to get Cost List Array from struct
 	*/
-	function getPatientCostListArray(address patientAddress) public view returns (uint[] costlistArray) {
+	function getPatientCostListArray(address patientAddress) public view returns (uint[2][] costlistArray) {
 		require(whitelists[patientAddress].patient == patientAddress);
-		return whitelists[patientAddress].costListArray;
+		return whitelists[patientAddress].costPairs;
 	}
 
 

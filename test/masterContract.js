@@ -11,14 +11,14 @@ contract('MasterContract', async (accounts) => {
 
 	it('should add a patient', async() => {
 		let instance = await MasterContract.new();
-		let addPax = await instance.addPatient(accounts[0], [accounts[1]], [],[]);
+		let addPax = await instance.addPatient(accounts[0], [accounts[1]], [[0,1],[1,2]]);
 		let pax = await instance.whitelists.call(accounts[0]);
 		assert.equal(pax, accounts[0]);
 	})
 
 	it('should delete a patient', async() => {
 		let instance = await MasterContract.new();
-		let addPax = await instance.addPatient(accounts[0], [accounts[1]], [],[]);
+		let addPax = await instance.addPatient(accounts[0], [accounts[1]], [[0,1],[1,2]]);
 		let pax = await instance.whitelists.call(accounts[0]);
 		assert.equal(pax, accounts[0]);
 
@@ -29,7 +29,7 @@ contract('MasterContract', async (accounts) => {
 
 	it('should update a requestor list', async() => {
 		let instance = await MasterContract.new();
-		let addPax = await instance.addPatient(accounts[0], [accounts[1]], [],[]);
+		let addPax = await instance.addPatient(accounts[0], [accounts[1]], [[0,1],[1,2]]);
 		let pax = await instance.whitelists.call(accounts[0]);
 		assert.equal(pax, accounts[0]);
 
@@ -44,21 +44,21 @@ contract('MasterContract', async (accounts) => {
 
 	it('should update a cost list', async() => {
 		let instance = await MasterContract.new();
-		let addPax = await instance.addPatient(accounts[0], [accounts[1]], [1],[1]);
+		let addPax = await instance.addPatient(accounts[0], [accounts[1]], [[0,1]]);
 		let pax = await instance.whitelists.call(accounts[0]);
 		assert.equal(pax, accounts[0]);
 
 		let costList = await instance.getPatientCostListArray(accounts[0]);
-		assert.equal(costList[0], 1);
+		assert.equal(costList[0][1], 1);
 
-		let updatePaxCost = await instance.updateWhitelistCosts(accounts[0], [1], [2]);
+		let updatePaxCost = await instance.updateWhitelistCosts(accounts[0], [[1,2]]);
 		let updatedCostList = await instance.getPatientCostListArray(accounts[0]);
-		assert.equal(updatedCostList[0], 2);
+		assert.equal(updatedCostList[0][1], 2);
 	})
 
 	it('should approve a whitelisted requestor', async() => {
 		let instance = await MasterContract.new();
-		let addPax = await instance.addPatient(accounts[0], [accounts[1]], [1],[1]);
+		let addPax = await instance.addPatient(accounts[0], [accounts[1]], [[0,1],[1,2]]);
 		let pax = await instance.whitelists.call(accounts[0]);
 		assert.equal(pax, accounts[0]);
 
@@ -67,21 +67,21 @@ contract('MasterContract', async (accounts) => {
 		assert.equal(approval.logs[0].args.patientAddress, accounts[0]);
 		assert.equal(approval.logs[0].args.requestor, accounts[1]);
 		assert.equal(approval.logs[0].args.result, true);
-		assert.equal(approval.logs[0].args.costIds[0], 1);
-		assert.equal(approval.logs[0].args.costs[0], 1);
+		assert.equal(approval.logs[0].args.costpairs[0][1], 1);
+		assert.equal(approval.logs[0].args.costpairs[1][1], 2);
 	})
 
 	it('should not approve a non-whitelisted requestor', async() => {
 		let instance = await MasterContract.new();
-		let addPax = await instance.addPatient(accounts[0], [accounts[2]], [1],[1]);
+		let addPax = await instance.addPatient(accounts[0], [accounts[1]], [[0,1],[1,2]]);
 		let pax = await instance.whitelists.call(accounts[0]);
 		assert.equal(pax, accounts[0]);
 
-		let approval = await instance.authorizeRequestor(accounts[0], accounts[1]);
+		let approval = await instance.authorizeRequestor(accounts[0], accounts[2]);
 		assert.equal(approval.logs[0].args.patientAddress, accounts[0]);
-		assert.equal(approval.logs[0].args.requestor, accounts[1]);
+		assert.equal(approval.logs[0].args.requestor, accounts[2]);
 		assert.equal(approval.logs[0].args.result, false);
-		assert.notEqual(approval.logs[0].args.costIds[0], 1);
-		assert.notEqual(approval.logs[0].args.costs[0], 1);
+		assert.equal(approval.logs[0].args.costpairs[0], undefined);
+		assert.equal(approval.logs[0].args.costpairs[1], undefined);
 	})
 })
